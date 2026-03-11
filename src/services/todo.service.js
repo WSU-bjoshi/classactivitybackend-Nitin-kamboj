@@ -5,20 +5,17 @@ import pool from "../db/connection.js";
 // import ToDoModel from "../models/todo.modles.js"
 import { getAllTodos, createTodo, toggleTodoById, deleteTodoById, getTaskById } from "../models/todo.modles.js";
 
-var todos = [
-    { id: 1, task: "Buy eggs", done: false },
-    { id: 2, task: "Buy Milk", done: false }
-];
+
 async function getAllTodosServices() {
-    return await pool.query("SELECT * FROM todos");
+    return await getAllTodos();
 }
 
-function createTodoServices(task) {
+async function createTodoServices(task) {
     if (!task || typeof task !== "string" || task.trim() === "") {
         // return res.status(400).json({ error: "Task is required" })
         throw new error("Invalid");
     }
-    return createTodo(task);
+    return await createTodo(task);
 }
 
 async function toggleTodoByIdServices(id) {
@@ -26,7 +23,11 @@ async function toggleTodoByIdServices(id) {
 
     // if (!todo) return null;
 
-    return await toggleTodoById(id);
+    const result = await toggleTodoById(id);
+    if (!result) {
+        throw new Error("Todo not found");
+    }
+    return result;
 }
 
 async function deleteTodoByIdServices(id) {
@@ -35,20 +36,17 @@ async function deleteTodoByIdServices(id) {
     // if (todoIndex === -1) {
     //     return null;
     // }
-
-    return await deleteTodoById(id);
+    const rowsDeleted = await deleteTodoById(id);
+    if (rowsDeleted === 0) {
+        throw new Error("Todo not found");
+    }
+    return { success: true };
 }
 
-function getTaskByIdServices(id) {
+async function getTaskByIdServices(id) {
 
-    const todo = todos.find(t => t.id === id);
-    if (todo) {
-        const task = todo.task;
-        return getTaskById(task);
-    }
-    // else {
-    //     return null;
-    // }
+    const todo = await toggleTodoById(id); // Re-using find logic or create a findById in model
+    return todo ? todo.task : null;
 }
 
 export {

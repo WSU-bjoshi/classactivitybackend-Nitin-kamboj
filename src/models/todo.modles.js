@@ -1,56 +1,47 @@
 import pool from "../db/connection.js";
-let nextId = 3;
+import Todo from "./Todo.js";
 
-var todos = [
-    { id: 1, task: "Buy eggs", done: false },
-    { id: 2, task: "Buy Milk", done: false }
-];
 
-export function getAllTodos() {
-    return todos;
+export async function getAllTodos() {
+    return await Todo.findAll({ order: [["id", "ASC"]] });
 }
 
 export async function createTodo(task) {
-    const [result] = await pool.query(
-        "INSERT INTO todos (task) VALUES (?)",
-        [task]
-    );
-
-    return {
-        id: result.insertId,
-        task,
-        completed: 0
-    };
+    // const [result] = await pool.query(
+    //     "INSERT INTO todos (task) VALUES (?)",
+    //     [task]
+    // );
+    // Todo.create
+    const newTodo = await Todo.create({
+        task: task
+    });
+    return newTodo;
 }
 
 
 export async function toggleTodoById(id) {
-    // const todo = todos.find(t => t.id === id);
+    // const [result] = await pool.query("SELECT task FROM todos WHERE id = ?", [id])
+    const todo = await Todo.findByPk(id);
 
-    // if (!todo) return null;
-    const [result] = await pool.query("SELECT task FROM todos WHERE id = ?", [id])
-    // todo.done = !todo.done;
-    // res.json({ message: "Toggle", todo });
+    if (todo) {
+        todo.completed = !todo.completed;
+        await todo.save();
+    }
+
+    return todo;
 }
 
 export async function deleteTodoById(id) {
-    const [result] = await pool.query(
-        "DELETE FROM todos WHERE id = ?",
-        [id]
-    );
-
+    // const [result] = await pool.query(
+    //     "DELETE FROM todos WHERE id = ?",
+    //     [id]
+    // );
+    const result = await Todo.destroy({
+        where: { id: id }
+    });
     return result;
 }
 
-
-export function getTaskById(task) {
-
-    // const todo = todos.find(t => t.id === id);
-    // if (todo) {
-    // const task = todo.task;
-    return task;
-    // }
-    // else {
-    //     return null;
-    // }
+export async function getTaskById(task) {
+    return await Todo.findByPk(id);
 }
